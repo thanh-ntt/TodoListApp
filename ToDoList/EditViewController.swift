@@ -31,14 +31,24 @@ class EditViewController: UIViewController {
         dateFormatter.dateFormat = "MMM d, h:mm a"
         return dateFormatter
     }()
-
+    
     override func viewDidLoad() {
         super.viewDidLoad()
-
+        refresh()
+    }
+    
+    func refresh() {
         itemTitle.text = item?.title
         itemDetails.text = item?.details
         targetedDateLabel.setTitle(Self.dateFormatter.string(from: item!.targetedDate), for: .normal)
-//        targetedDateLabel.title = Self.dateFormatter.string(from: item!.targetedDate)
+        targetedDateLabel.contentHorizontalAlignment = .left
+        
+        // Enable user to change targeted date if the task has not been done
+        if (item?.hasDone == true) {
+            targetedDateLabel.isEnabled = false
+        }
+        
+        // Get the current category
         switch (item?.category.rawValue) {
         case Item.Category.Work.rawValue:
             categorySegments.selectedSegmentIndex = 0
@@ -52,6 +62,7 @@ class EditViewController: UIViewController {
         default:
             break
         }
+        
         if (item?.hasDone == true) {
             finishedDateLabel.isHidden = false
             finishedDateLabel.text = Self.dateFormatter.string(from: item!.finishedDate)
@@ -80,22 +91,36 @@ class EditViewController: UIViewController {
         navigationController?.popToRootViewController(animated: true)
     }
     
-//    @IBAction func didTapTargetedDate() {
-//        guard let myItem = self.item else {
-//            return
-//        }
-//
-//        realm.beginWrite()
-//        realm.delete(myItem)
-//        try! realm.commitWrite()
-//
-//        deletionHandler?()
-//        navigationController?.popToRootViewController(animated: true)
-//    }
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        guard let identifierString = segue.identifier else {
+            super.prepare(for: segue, sender: sender)
+            return
+        }
+        switch identifierString {
+        case "editDateSegue":
+            guard
+                let editDateViewController = segue.destination as? EditDateViewController
+                else {
+                    return
+            }
+            editDateViewController.item = self.item
+            editDateViewController.realm = self.realm
+            let backItem = UIBarButtonItem()
+            backItem.title = "Back"
+            editDateViewController.navigationItem.backBarButtonItem = backItem
+            editDateViewController.completionHandler = { [weak self] in
+                self?.refresh()
+            }
+            editDateViewController.navigationItem.largeTitleDisplayMode = .never
+            break
+        default:
+            return
+        }
+    }
     
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
-
+        
         if !(self.item?.isInvalidated ?? true) && self.isMovingFromParent {
             if let title = itemTitle.text, !title.isEmpty, let details = itemDetails.text {
                 realm.beginWrite()
@@ -115,15 +140,15 @@ class EditViewController: UIViewController {
     
     
     
-
+    
     /*
-    // MARK: - Navigation
-
-    // In a storyboard-based application, you will often want to do a little preparation before navigation
-    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        // Get the new view controller using segue.destination.
-        // Pass the selected object to the new view controller.
-    }
-    */
-
+     // MARK: - Navigation
+     
+     // In a storyboard-based application, you will often want to do a little preparation before navigation
+     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+     // Get the new view controller using segue.destination.
+     // Pass the selected object to the new view controller.
+     }
+     */
+    
 }
