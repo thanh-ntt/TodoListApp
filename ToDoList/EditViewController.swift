@@ -106,7 +106,6 @@ class EditViewController: UIViewController {
             editDateViewController.item = self.item
             editDateViewController.realm = self.realm
             let backItem = UIBarButtonItem()
-            backItem.title = "Back"
             editDateViewController.navigationItem.backBarButtonItem = backItem
             editDateViewController.completionHandler = { [weak self] in
                 self?.refresh()

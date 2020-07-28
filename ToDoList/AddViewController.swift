@@ -18,20 +18,12 @@ class AddViewController: UIViewController, UITextFieldDelegate, UITextViewDelega
     @IBOutlet var categorySegments: UISegmentedControl!
     
     private let realm = try! Realm()
+    private var item: Item?
     public var completionHandler: (() -> Void)?
     
     override func viewDidLoad() {
         super.viewDidLoad()
         refresh()
-        configureUserNotificationsCenter()
-    }
-    
-    func configureUserNotificationsCenter() {
-        UNUserNotificationCenter.current().delegate = self
-        let snoozeAction = UNNotificationAction(identifier: "SNOOZE_ACTION", title: "Snooze for 15 mins", options: [])
-        let markDoneAction = UNNotificationAction(identifier: "DONE_ACTION", title: "Mark as done", options: [])
-        let reminderCategory = UNNotificationCategory(identifier: "REMINDER_NOTIFICATION", actions: [snoozeAction, markDoneAction], intentIdentifiers: [], options: [])
-        UNUserNotificationCenter.current().setNotificationCategories([reminderCategory])
     }
     
     func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
@@ -41,14 +33,14 @@ class AddViewController: UIViewController, UITextFieldDelegate, UITextViewDelega
                 scheduleNotification(atDate: Calendar.current.date(byAdding: .minute, value: 15, to: Date()))
                 break
             case "DONE_ACTION":
-                didTapSaveButton()
+                self.realm.beginWrite()
+                self.item!.finishTask()
+                try! self.realm.commitWrite()
                 break
             default:
                 break
             }
         }
-        
-//         Always call the completion handler when done.
         completionHandler()
     }
     
@@ -72,21 +64,26 @@ class AddViewController: UIViewController, UITextFieldDelegate, UITextViewDelega
     }
     
     func scheduleNotification(minutesBefore: Int? = nil, atDate: Date? = nil) {
-        let center = UNUserNotificationCenter.current()
+        let notificationCenter = UNUserNotificationCenter.current()
+        notificationCenter.delegate = self
         
         // Ask user permission to show notification
-        center.requestAuthorization(options: [.alert, .badge]) { success, error in
+        notificationCenter.requestAuthorization(options: [.alert, .badge]) { success, error in
             if let error = error {
                 print(error.localizedDescription)
             }
         }
+        
+        let categoryIdentifier = "REMINDER_NOTIFICATION"
         
         let content = UNMutableNotificationContent()
         content.title = self.itemTitle.text!
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "h:mm a"
         content.body = "Today at " + dateFormatter.string(from: datePicker.date)
-        content.categoryIdentifier = "REMINDER_NOTIFICATION"
+        content.sound = UNNotificationSound.default
+        content.badge = 1
+        content.categoryIdentifier = categoryIdentifier
         
         var dateComponents: DateComponents
         if (minutesBefore != nil) {
@@ -96,8 +93,13 @@ class AddViewController: UIViewController, UITextFieldDelegate, UITextViewDelega
         }
         let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: false)
         
-        let request = UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: trigger)
-        center.add(request)
+        let request = UNNotificationRequest(identifier: "Local Notification", content: content, trigger: trigger)
+        UNUserNotificationCenter.current().add(request)
+        
+        let snoozeAction = UNNotificationAction(identifier: "SNOOZE_ACTION", title: "Snooze for 15 mins", options: [])
+        let markDoneAction = UNNotificationAction(identifier: "DONE_ACTION", title: "Mark as done", options: [.destructive])
+        let reminderCategory = UNNotificationCategory(identifier: categoryIdentifier, actions: [snoozeAction, markDoneAction], intentIdentifiers: [], options: [])
+        UNUserNotificationCenter.current().setNotificationCategories([reminderCategory])
     }
     
     @IBAction func didTapSaveButton() {
@@ -112,6 +114,7 @@ class AddViewController: UIViewController, UITextFieldDelegate, UITextViewDelega
             }
             self.tabBarController?.selectedIndex = 0
             scheduleNotification(minutesBefore: 60)
+            self.item = newItem
             refresh()
         }
     }
