@@ -80,7 +80,7 @@
                             <userLayoutGuide location="448" affinity="minY"/>
                         </userGuides>
                         <subviews>
-                            <datePicker contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" datePickerMode="dateAndTime" minuteInterval="1" translatesAutoresizingMaskIntoConstraints="NO" id="Y1O-Eh-iRf">
+                            <datePicker contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" datePickerMode="dateAndTime" minuteInterval="15" translatesAutoresizingMaskIntoConstraints="NO" id="Y1O-Eh-iRf">
                                 <rect key="frame" x="20" y="88" width="374" height="225"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="225" id="uG5-S5-0yS"/>
@@ -301,7 +301,11 @@
                         <viewLayoutGuide key="safeArea" id="4Yf-X2-QI8"/>
                     </view>
                     <navigationItem key="navigationItem" id="Wdc-Gq-fvd">
-                        <barButtonItem key="rightBarButtonItem" systemItem="save" id="5Rk-XM-8ih"/>
+                        <barButtonItem key="rightBarButtonItem" systemItem="save" id="5Rk-XM-8ih">
+                            <connections>
+                                <action selector="didTapSaveButton" destination="oG9-Vu-vSw" id="ZUd-Do-PKd"/>
+                            </connections>
+                        </barButtonItem>
                     </navigationItem>
                     <connections>
                         <outlet property="datePicker" destination="eVs-TT-Z3g" id="90l-lg-Thz"/>

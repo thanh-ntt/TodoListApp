@@ -82,7 +82,6 @@ class AddViewController: UIViewController, UITextFieldDelegate, UITextViewDelega
         dateFormatter.dateFormat = "h:mm a"
         content.body = "Today at " + dateFormatter.string(from: datePicker.date)
         content.sound = UNNotificationSound.default
-        content.badge = 1
         content.categoryIdentifier = categoryIdentifier
         
         var dateComponents: DateComponents
